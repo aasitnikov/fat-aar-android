@@ -139,13 +139,20 @@ final class VariantProcessor {
 
     private void processDeepLinkTasks() {
         String taskName = "extractDeepLinksForAar${mVariant.name.capitalize()}"
-        TaskProvider extractDeepLinks = mProject.tasks.named(taskName)
-        if (extractDeepLinks == null) {
+        TaskProvider extractDeepLinksForAar = mProject.tasks.named(taskName)
+        if (extractDeepLinksForAar == null) {
             throw new RuntimeException("Can not find task ${taskName}!")
         }
 
-        extractDeepLinks.configure {
+        extractDeepLinksForAar.configure {
             dependsOn(mExplodeTasks)
+        }
+
+        TaskProvider extractDeepLinks = mProject.tasks.named("extractDeepLinks${mVariant.name.capitalize()}")
+        if (extractDeepLinks != null) {
+            extractDeepLinks.configure {
+                dependsOn(mExplodeTasks)
+            }
         }
     }
 
