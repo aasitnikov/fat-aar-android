@@ -5,8 +5,6 @@ include ':lib-aar2'
 include ':lib-aar-local'
 include ':app'
 
-includeBuild('../source') {
-    dependencySubstitution {
-        substitute module('com.github.kezong:fat-aar') using project(':')
-    }
-}
+// The plugin is consumed as a single prebuilt binary (published once to mavenLocal)
+// so the same artifact is tested against every AGP/Gradle combination.
+// To rebuild against local plugin source: cd ../source && ./gradlew publishToMavenLocal

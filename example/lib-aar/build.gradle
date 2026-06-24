@@ -1,15 +1,17 @@
 apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-kapt'
+if (!rootProject.ext.agpVersion.startsWith('9.')) {
+    apply plugin: 'kotlin-android'
+    apply plugin: 'kotlin-kapt'
+}
 
 android {
-    compileSdkVersion = 34
+    compileSdk = (findProperty('compileSdk') ?: 34) as Integer
 
     namespace "com.kezong.demo.libaar"
 
     defaultConfig {
-        minSdkVersion 16
-        targetSdkVersion 34
+        minSdk = (findProperty('minSdk') ?: 16) as Integer
+        targetSdk = (findProperty('targetSdk') ?: 34) as Integer
         versionCode 1
         versionName "1.0"
         consumerProguardFiles 'proguard-rules.pro'
@@ -18,7 +20,7 @@ android {
     buildTypes {
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 
@@ -45,9 +47,10 @@ android {
     }
 }
 
-android.libraryVariants.all { variant ->
-    variant.outputs.all { output ->
-        outputFileName = "change-name-lib-aar-${variant.name.capitalize()}.aar"
+tasks.matching { it.name.startsWith('bundle') && it.name.endsWith('Aar') }.configureEach { bundleTask ->
+    if (bundleTask.hasProperty('archiveFileName')) {
+        String variantName = bundleTask.name.substring('bundle'.length(), bundleTask.name.length() - 'Aar'.length())
+        bundleTask.archiveFileName.set("change-name-lib-aar-${variantName}.aar")
     }
 }
 

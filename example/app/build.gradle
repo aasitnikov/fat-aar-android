@@ -1,9 +1,11 @@
 apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-kapt'
+if (!rootProject.ext.agpVersion.startsWith('9.')) {
+    apply plugin: 'kotlin-android'
+    apply plugin: 'kotlin-kapt'
+}
 
 android {
-    compileSdkVersion = 34
+    compileSdk = (findProperty('compileSdk') ?: 34) as Integer
 
     namespace "com.fataar.demo"
 
@@ -14,8 +16,8 @@ android {
 
     defaultConfig {
         applicationId "com.fataar.demo"
-        minSdkVersion 19
-        targetSdkVersion 34
+        minSdk = (findProperty('minSdk') ?: 19) as Integer
+        targetSdk = (findProperty('targetSdk') ?: 34) as Integer
         versionCode 1
         versionName "1.0"
     }
@@ -31,8 +33,10 @@ android {
         viewBinding = true
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
+    if (!rootProject.ext.agpVersion.startsWith('9.')) {
+        kotlinOptions {
+            jvmTarget = "17"
+        }
     }
 }
 

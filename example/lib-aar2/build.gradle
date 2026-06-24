@@ -1,13 +1,13 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion = 34
+    compileSdk = (findProperty('compileSdk') ?: 34) as Integer
 
     namespace "com.kezong.demo.libaar2"
 
     defaultConfig {
-        minSdkVersion 16
-        targetSdkVersion 34
+        minSdk = (findProperty('minSdk') ?: 16) as Integer
+        targetSdk = (findProperty('targetSdk') ?: 34) as Integer
         versionCode 1
         versionName "1.0"
     }
@@ -15,7 +15,7 @@ android {
     buildTypes {
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 

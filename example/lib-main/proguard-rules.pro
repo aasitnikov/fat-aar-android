@@ -24,3 +24,10 @@
 -dontshrink
 -dontobfuscate
 -dontpreverify
+
+# glide is embedded with `transitive = false`, so its own transitive dependencies
+# (disklrucache, gifdecoder) are intentionally not bundled. Suppress R8 full-mode
+# missing-class errors for them (and for the merged R class referenced by fresco).
+-dontwarn com.bumptech.glide.disklrucache.**
+-dontwarn com.bumptech.glide.gifdecoder.**
+-dontwarn com.kezong.demo.lib.R$styleable

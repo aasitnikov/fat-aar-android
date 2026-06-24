@@ -1,6 +1,8 @@
 apply plugin: 'com.android.library'
 apply plugin: 'com.kezong.fat-aar'
-apply plugin: 'kotlin-android'
+if (!rootProject.ext.agpVersion.startsWith('9.')) {
+    apply plugin: 'kotlin-android'
+}
 
 repositories {
     flatDir {
@@ -9,13 +11,13 @@ repositories {
 }
 
 android {
-    compileSdkVersion = 34
+    compileSdk = (findProperty('compileSdk') ?: 34) as Integer
 
     namespace "com.kezong.demo.lib"
 
     defaultConfig {
-        minSdkVersion 16
-        targetSdkVersion 34
+        minSdk = (findProperty('minSdk') ?: 16) as Integer
+        targetSdk = (findProperty('targetSdk') ?: 34) as Integer
         versionCode 1
         versionName "1.0.0"
     }
@@ -23,7 +25,7 @@ android {
     buildTypes {
         release {
             minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 
@@ -39,11 +41,10 @@ android {
         }
     }
 
-    packagingOptions {
-        exclude 'lib/x86/*.so'
-        exclude 'lib/x86_64/*.so'
-        exclude 'lib/armeabi/*.so'
-        exclude 'lib/arm64-v8a/*.so'
+    packaging {
+        jniLibs {
+            excludes += ['lib/x86/*.so', 'lib/x86_64/*.so', 'lib/armeabi/*.so', 'lib/arm64-v8a/*.so']
+        }
     }
 
     compileOptions {
@@ -52,17 +53,15 @@ android {
     }
 }
 
-afterEvaluate {
-    // for app test, copy the final aar to application libs
-    android.libraryVariants.all { variant ->
-        File outputFile = variant.outputs.first().outputFile
-        tasks.named("assemble${variant.name.capitalize()}").configure {
-            doLast {
-                copy {
-                    from outputFile
-                    into "../app/libs"
-                    rename outputFile.name, "fat-aar-final.aar"
-                }
+// for app test, copy the final aar to application libs without old AGP variant APIs
+tasks.matching { it.name.startsWith('bundle') && it.name.endsWith('Aar') }.configureEach { bundleTask ->
+    bundleTask.doLast {
+        File outputFile = bundleTask.archiveFile.get().asFile
+        if (outputFile.exists()) {
+            copy {
+                from outputFile
+                into "../app/libs"
+                rename outputFile.name, "fat-aar-final.aar"
             }
         }
     }
@@ -107,4 +106,3 @@ dependencies {
     // don't want to embed in
     implementation('androidx.appcompat:appcompat:1.6.1')
 }
-

@@ -1,2 +1,5 @@
 before_install:
 - cd ./source
+
+install:
+- ./gradlew clean publishToMavenLocal
