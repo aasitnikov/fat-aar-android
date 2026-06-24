@@ -3,7 +3,7 @@
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/abdallahFc/fat-aar-android/blob/master/LICENSE)
 [![JitPack](https://jitpack.io/v/abdallahFc/fat-aar-android.svg)](https://jitpack.io/#abdallahFc/fat-aar-android)
 
-The solution of merging aar works with [AGP][3] 8.2+ (tested through 9.2)
+The solution of merging aar. A single plugin binary works across [AGP][3] **8.3 → 9.2** — every AGP/Gradle combination below was verified end-to-end against all merge features.
 
 > [!CAUTION]
 > Plugin is in maintenance mode, consider official [Fused Library Plugin](https://developer.android.com/build/publish-library/fused-library)
@@ -117,9 +117,27 @@ See [anatomy of an aar file here][2].
 
 
 ## Gradle Version Support
+
+`1.5.0` is a single plugin artifact (compiled once against AGP 8.3.0, AGP resolved from the
+consumer at runtime). The table below lists the exact combinations verified end-to-end — each
+one builds the sample fat-aar and passes **all 12 merge features**:
+
+| AGP    | Gradle  | Status |
+|:------:|:-------:|:------:|
+| 8.3.0  | 8.4     | ✅ all features |
+| 8.5.0  | 8.7     | ✅ all features |
+| 8.7.0  | 8.9     | ✅ all features |
+| 8.13.0 | 8.13    | ✅ all features |
+| 9.0.0  | 9.4.1   | ✅ all features |
+| 9.1.0  | 9.3.1   | ✅ all features |
+| 9.2.0  | 9.4.1   | ✅ all features |
+
+> Each AGP enforces a minimum Gradle version; the Gradle column shows a verified-compatible
+> pairing. Use Kotlin Gradle plugin `1.9.x` for the AGP 8.x line and `2.2.10` for AGP 9.x.
+
+### Older releases
 |     Version     | Android Gradle Plugin |  Gradle   |
 |:---------------:|:---------------------:|:---------:|
-|      1.5.0      | 8.2, 8.3, 8.5, 8.7, 8.13, 9.0, 9.1, 9.2 | AGP-required Gradle (wrapper-tested: 8.2, 8.4, 8.7, 8.11.1, 9.3.1) |
 |      1.4.5      |          9.0          |   9.3.0   |
 |      1.4.4      |         8.13          |   8.14    |
 |      1.4.2      |          8.7          |   8.12    |
