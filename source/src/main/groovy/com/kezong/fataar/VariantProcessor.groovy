@@ -485,8 +485,17 @@ final class VariantProcessor {
                 )
             }
         } else {
-            for (archiveLibrary in mAndroidArchiveLibraries) {
-                FatUtils.logInfo("Merge resource，Library res：${archiveLibrary.resFolder}")
+            // AGP 9+: the merge task and its Sources API wiring were set up inside the onVariants
+            // callback (see FatAarPlugin.registerResMergeTask). Now that the embedded artifacts are
+            // resolved, fill in the task's inputs.
+            String resMergeTaskName = FatAarResMergeTask.nameFor(mVariantInfo.name)
+            TaskProvider<FatAarResMergeTask> resMergeTask = mProject.tasks.named(resMergeTaskName, FatAarResMergeTask)
+            mAndroidArchiveLibraries.each {
+                FatUtils.logInfo("Merge resource，Library res：${it.resFolder}")
+            }
+            resMergeTask.configure {
+                dependsOn(mExplodeTasks)
+                resDirectories.from(mAndroidArchiveLibraries.collect { it.resFolder })
             }
         }
     }

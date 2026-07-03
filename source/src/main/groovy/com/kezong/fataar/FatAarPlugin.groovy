@@ -12,6 +12,7 @@ import org.gradle.api.artifacts.ResolvedDependency
 import org.gradle.api.internal.file.FileResolver
 import org.gradle.api.internal.tasks.TaskDependencyFactory
 import org.gradle.api.provider.MapProperty
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.internal.model.CalculatedValueContainerFactory
 
 import javax.inject.Inject
@@ -76,11 +77,41 @@ class FatAarPlugin implements Plugin<Project> {
                 project.extensions.getByType(AndroidComponentsExtension.class)
         components.onVariants(components.selector().all()) { variant ->
             VariantInfo variantInfo = VariantInfo.fromNew(variant)
+            registerResMergeTask(variant)
             if (!variantPackagesProperty.getOrElse([:]).containsKey(variantInfo.name)) {
                 variantPackagesProperty.put(variantInfo.name, project.objects.listProperty(AndroidArchiveLibrary.class))
             }
             variantInfos.add(variantInfo)
         }
+    }
+
+    /**
+     * Registers the embedded-res merge task and wires its output into the variant's Android
+     * resources. This MUST happen inside the {@code onVariants} callback: the Sources API
+     * ({@link com.android.build.api.variant.SourceDirectories#addGeneratedSourceDirectory}) is only
+     * honored while the variant is being configured; calling it later (e.g. in {@code afterEvaluate})
+     * is silently ignored, leaving the fat-aar without resources.
+     *
+     * The task's inputs (the embedded res folders) are populated later, in
+     * {@link VariantProcessor#processResources()}, once the embedded artifacts are resolved.
+     */
+    private void registerResMergeTask(Variant variant) {
+        if (FatUtils.compareVersion(VersionAdapter.AGPVersion, "9.0.0") < 0) {
+            // On AGP < 9 res is merged via the legacy path (LibraryVariant.registerGeneratedResFolders
+            // in VariantProcessor.processResources); this Sources-API task is only for AGP 9+.
+            return
+        }
+        def resSources = variant.sources.res
+        if (resSources == null) {
+            // Android resources are disabled for this variant; nothing to merge.
+            return
+        }
+        TaskProvider<FatAarResMergeTask> resMergeTask = project.tasks.register(
+                FatAarResMergeTask.nameFor(variant.name), FatAarResMergeTask
+        )
+        // The wired property MUST be the task's own @OutputDirectory: AGP overrides it (via
+        // convention) with a build-managed location and makes the res pipeline depend on the task.
+        resSources.addGeneratedSourceDirectory(resMergeTask) { it.outputDirectory }
     }
 
     private void doAfterEvaluate() {
