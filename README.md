@@ -23,7 +23,7 @@ buildscript {
         }
     }
     dependencies {
-        classpath("com.github.aasitnikov:fat-aar-android:1.4.5")
+        classpath("com.github.aasitnikov:fat-aar-android:1.4.6")
     }
 }
 ```
@@ -119,6 +119,7 @@ See [anatomy of an aar file here][2].
 ## Gradle Version Support
 |     Version     | Android Gradle Plugin |  Gradle   |
 |:---------------:|:---------------------:|:---------:|
+|      1.4.6      |          9.0          |   9.3.0   |
 |      1.4.5      |          9.0          |   9.3.0   |
 |      1.4.4      |         8.13          |   8.14    |
 |      1.4.2      |          8.7          |   8.12    |
@@ -144,6 +145,8 @@ The following link which version of Gradle is required for each version of the A
 [Plugin version and Required Gradle version](https://developer.android.com/build/releases/gradle-plugin)
 
 ## Version Log
+- [1.4.6](<https://github.com/aasitnikov/fat-aar-android/releases/tag/1.4.6>)
+  - Merge resources using new AGP DSL
 - [1.4.5](<https://github.com/aasitnikov/fat-aar-android/releases/tag/1.4.5>)
   - Add support for AGP 9.0 [#4](https://github.com/aasitnikov/fat-aar-android/pull/4). Thanks, [@erykrutkowski](https://github.com/erykrutkowski)!
 - [1.4.4](<https://github.com/aasitnikov/fat-aar-android/releases/tag/1.4.4>)
