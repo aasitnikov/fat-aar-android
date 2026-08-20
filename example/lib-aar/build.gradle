@@ -1,6 +1,4 @@
 apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-kapt'
 
 android {
     compileSdkVersion = 34
@@ -18,7 +16,7 @@ android {
     buildTypes {
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 
@@ -42,12 +40,6 @@ android {
     compileOptions {
         sourceCompatibility 17
         targetCompatibility 17
-    }
-}
-
-android.libraryVariants.all { variant ->
-    variant.outputs.all { output ->
-        outputFileName = "change-name-lib-aar-${variant.name.capitalize()}.aar"
     }
 }
 
