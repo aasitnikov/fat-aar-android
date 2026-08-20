@@ -78,6 +78,7 @@ class FatAarPlugin implements Plugin<Project> {
         components.onVariants(components.selector().all()) { variant ->
             VariantInfo variantInfo = VariantInfo.fromNew(variant)
             registerResMergeTask(variant)
+            registerAssetsMergeTask(variant)
             if (!variantPackagesProperty.getOrElse([:]).containsKey(variantInfo.name)) {
                 variantPackagesProperty.put(variantInfo.name, project.objects.listProperty(AndroidArchiveLibrary.class))
             }
@@ -112,6 +113,37 @@ class FatAarPlugin implements Plugin<Project> {
         // The wired property MUST be the task's own @OutputDirectory: AGP overrides it (via
         // convention) with a build-managed location and makes the res pipeline depend on the task.
         resSources.addGeneratedSourceDirectory(resMergeTask) { it.outputDirectory }
+    }
+
+    /**
+     * Registers the embedded-assets merge task and wires its output into the variant's Android
+     * assets, mirroring {@link #registerResMergeTask(Variant)} for {@code assets} instead of
+     * {@code res}. Without this, embedded AARs' {@code assets/} directories are silently dropped
+     * from the fat AAR under AGP 9+: {@link VariantProcessor#processAssets()}'s legacy fallback
+     * mutates {@code android.sourceSets[variant].assets.srcDir(...)} inside the merge task's
+     * {@code doFirst}, but AGP 9's assets-merging task no longer reads that source set at
+     * execution time — its inputs are fixed by the Sources API during variant configuration.
+     *
+     * The task's inputs (the embedded assets folders) are populated later, in
+     * {@link VariantProcessor#processAssets()}, once the embedded artifacts are resolved.
+     */
+    private void registerAssetsMergeTask(Variant variant) {
+        if (FatUtils.compareVersion(VersionAdapter.AGPVersion, "9.0.0") < 0) {
+            // On AGP < 9 assets are merged via the legacy path (SourceDirectorySet.srcDir(...) in
+            // VariantProcessor.processAssets); this Sources-API task is only for AGP 9+.
+            return
+        }
+        def assetsSources = variant.sources.assets
+        if (assetsSources == null) {
+            // Assets are disabled for this variant; nothing to merge.
+            return
+        }
+        TaskProvider<FatAarAssetsMergeTask> assetsMergeTask = project.tasks.register(
+                FatAarAssetsMergeTask.nameFor(variant.name), FatAarAssetsMergeTask
+        )
+        // The wired property MUST be the task's own @OutputDirectory: AGP overrides it (via
+        // convention) with a build-managed location and makes the assets pipeline depend on it.
+        assetsSources.addGeneratedSourceDirectory(assetsMergeTask) { it.outputDirectory }
     }
 
     private void doAfterEvaluate() {
