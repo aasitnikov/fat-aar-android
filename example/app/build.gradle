@@ -1,6 +1,4 @@
 apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-kapt'
 
 android {
     compileSdkVersion = 34
@@ -29,10 +27,6 @@ android {
 
     buildFeatures {
         viewBinding = true
-    }
-
-    kotlinOptions {
-        jvmTarget = "17"
     }
 }
 

@@ -506,22 +506,44 @@ final class VariantProcessor {
      * AaptOptions.setIgnoreAssets and AaptOptions.setIgnoreAssetsPattern will work as normal
      */
     private void processAssets() {
-        Task assetsTask = mVersionAdapter.getMergeAssets()
-        if (assetsTask == null) {
-            throw new RuntimeException("Can not find task in variant.getMergeAssets()!")
-        }
+        if (mVariant != null) {
+            Task assetsTask = mVersionAdapter.getMergeAssets()
+            if (assetsTask == null) {
+                throw new RuntimeException("Can not find task in variant.getMergeAssets()!")
+            }
 
-        assetsTask.dependsOn(mExplodeTasks)
-        assetsTask.doFirst {
-            mProject.android.sourceSets.each {
-                if (it.name == mVariantInfo.name) {
-                    for (archiveLibrary in mAndroidArchiveLibraries) {
-                        if (archiveLibrary.assetsFolder != null && archiveLibrary.assetsFolder.exists()) {
-                            FatUtils.logInfo("Merge assets，Library assets folder：${archiveLibrary.assetsFolder}")
-                            it.assets.srcDir(archiveLibrary.assetsFolder)
+            assetsTask.dependsOn(mExplodeTasks)
+            assetsTask.doFirst {
+                mProject.android.sourceSets.each {
+                    if (it.name == mVariantInfo.name) {
+                        for (archiveLibrary in mAndroidArchiveLibraries) {
+                            if (archiveLibrary.assetsFolder != null && archiveLibrary.assetsFolder.exists()) {
+                                FatUtils.logInfo("Merge assets，Library assets folder：${archiveLibrary.assetsFolder}")
+                                it.assets.srcDir(archiveLibrary.assetsFolder)
+                            }
                         }
                     }
                 }
+            }
+        } else {
+            // AGP 9+: the merge task and its Sources API wiring were set up inside the onVariants
+            // callback (see FatAarPlugin.registerAssetsMergeTask). Now that the embedded artifacts
+            // are resolved, fill in the task's inputs.
+            //
+            // Unlike the legacy branch above, this runs at configuration time, before the explode
+            // tasks have executed - archiveLibrary.assetsFolder.exists() would always be false here
+            // and silently drop every library. Just wire the paths as task inputs (same as
+            // processResources() does for resFolder) and let dependsOn(mExplodeTasks) order things
+            // correctly; FatAarAssetsMergeTask itself skips any path that isn't a directory once it
+            // actually runs.
+            String assetsMergeTaskName = FatAarAssetsMergeTask.nameFor(mVariantInfo.name)
+            TaskProvider<FatAarAssetsMergeTask> assetsMergeTask = mProject.tasks.named(assetsMergeTaskName, FatAarAssetsMergeTask)
+            mAndroidArchiveLibraries.each {
+                FatUtils.logInfo("Merge assets，Library assets folder：${it.assetsFolder}")
+            }
+            assetsMergeTask.configure {
+                dependsOn(mExplodeTasks)
+                assetDirectories.from(mAndroidArchiveLibraries.findAll { it.assetsFolder != null }.collect { it.assetsFolder })
             }
         }
     }
